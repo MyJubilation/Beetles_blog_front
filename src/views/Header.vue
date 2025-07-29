@@ -13,6 +13,9 @@
 					<el-button style="height: 40px; margin-left: 20px;" color="#58C9B9"><el-icon><Select /></el-icon><span>搜索</span></el-button>
 				</div>
 				<div class="NavList">
+					<router-link :to="{ path:'/admin/homepage/main' }" style="width: 80px;">
+						<span>管理页</span>
+					</router-link>
 					<router-link :to="{ path:'/' }">
 						<span>首页</span>
 					</router-link>

@@ -5,6 +5,7 @@ import WritingArticles from "@/views/writingArticles/WritingArticles.vue"
 import AboutMe from "@/views/AboutMe.vue"
 import Login from "@/views/Login/Login.vue"
 import Register from "@/views/Login/Register.vue"
+import AdminHomepage from "@/views/Admin/Homepage/Homepage.vue"
 
 const constantRoutes = [
 	{
@@ -53,6 +54,23 @@ const constantRoutes = [
 	{
 		path: "/writingarticles",
 		component: WritingArticles
+	},
+	
+	{
+		path: "/admin/homepage",
+		component: AdminHomepage,
+		children:[
+		  {
+		    path:'main',
+		    name:'adminMain',
+		    component: () => import('../views/Admin/Homepage/Main.vue')
+		  },
+		  {
+		    path:'form/basicForm',
+		    name:'basicForm',
+		    component: () => import('../views/Admin/Homepage/Form/BasicForm.vue')
+		  }
+		]
 	},
 ]
 

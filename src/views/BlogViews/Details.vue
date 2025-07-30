@@ -29,6 +29,19 @@
 			<!-- <div v-html="detailsContent" class="markdown-body" style="border-radius: 5px; padding: 10px;"></div> -->
 			<div class="details">
 				<h1 style="display: flex; justify-content: center;">{{ title }}</h1>
+				<div style="display: flex; justify-content: center; align-items: center; margin-bottom: 10px;">
+					<span>
+						作者(昵称)：
+						<span style="color: #999ABB; margin-left: 6px;">{{ author }}</span>
+					</span>
+				</div>
+				<div style="display: flex; justify-content: center; align-items: center;">
+					<el-icon size="20" style="margin-right: 10px;"><Clock /></el-icon>
+					<span style="color: #999ABB;">于<span style="font-size: 14px;">{{ createTime }}</span>发布</span>
+					<!-- <span v-if="updateTime!=createTime && updateTime!=null">于{{ updateTime }}修改</span> -->
+					<el-icon size="20" style="margin-left: 40px; margin-right: 10px;"><View /></el-icon>
+					<span style="color: #999ABB;">浏览量：<span style="font-size: 14px;">{{ view_count }}</span></span>
+				</div>
 				<el-divider>
 					<!-- <el-icon><star-filled /></el-icon> -->
 					<span style="color: #969698; font-size: 18px;">摘 要</span>
@@ -48,14 +61,14 @@
 					<div style="margin-left: 50%; display: flex;">
 						<div class="detailsBottonNavi-buttom" @click="likeDetail">
 							<img :src="isLiked ? likedFill : likeFill"  alt="点赞" width="24" height="24">
-							<span :style="{ color: isLiked ? '#FD9983' : '#C3C2CC', marginLeft: '8px' }">13</span>
+							<span :style="{ color: isLiked ? '#FD9983' : '#C3C2CC', marginLeft: '8px' }">{{ likes }}</span>
 						</div>
 						<!-- <div class="detailsBottonNavi-buttom">
 							<img src="@/assets/unlike-fill.svg" alt="图标" width="24" height="24">
 						</div> -->
 						<div class="detailsBottonNavi-buttom" @click="starDetail">
 							<img :src="isStared ? staredFill : starFill" alt="收藏" width="24" height="24">
-							<span :style="{ color: isStared ? '#FD9983' : '#C3C2CC', marginLeft: '8px' }">133</span>
+							<span :style="{ color: isStared ? '#FD9983' : '#C3C2CC', marginLeft: '8px' }">{{ stars }}</span>
 						</div>
 						<div class="detailsBottonNavi-buttom" @click="commentDetail">
 							<img src="@/assets/message-fill.svg" alt="评论" width="24" height="24">
@@ -97,7 +110,7 @@
 			</div>
 			<div class="comment-content">
 				<div class="comment-input-area">
-					<textarea placeholder="写下你的评论..." v-model="newComment"></textarea>
+					<textarea placeholder="写下你的评论..." v-model="newComment" style="font-size: 16px;"></textarea>
 					<div class="submit-comment">
 						<button @click="submitComment">发布</button>
 					</div>
@@ -107,9 +120,9 @@
 						<img src="../../../public/favicon.png" style="height: 32px; width: 32px; padding: 10px 0;" />
 					</div>
 					<div class="comment-item">
-						<div class="comment-user">{{ comment.user }}</div>
-						<div class="comment-text">{{ comment.text }}</div>
-						<div class="comment-time">{{ comment.time }}</div>
+						<div class="comment-user">{{ comment.author }}</div>
+						<div class="comment-text">{{ comment.comment }}</div>
+						<div class="comment-time">{{ comment.createTime }}</div>
 					</div>
 				</div>
 			</div>
@@ -125,7 +138,7 @@
 	import { useRoute, onBeforeRouteUpdate } from 'vue-router'
 	import MarkdownIt from 'markdown-it'
 	import { async } from '@kangc/v-md-editor';
-	import { post } from '../../request';
+	import { get, post } from '../../request';
 	import Header from '../../views/Header.vue';
 	import 'github-markdown-css';
 	import { htmlToPDF } from '../../lib/utils/html2pdf';
@@ -137,14 +150,17 @@
 	
 	// var md = new MarkdownIt();
 	import highlightJs from 'highlight.js'; // 使用 ES 模块导入
-	
-	// top值范围[150,500]
+	import { ElMessage } from 'element-plus';
+	import { sleep } from '../../axios';
+		
+	// top值范围[100,500]
+	// 弹幕取评论的前10条进行滚动
 	const danmakus = ref([
-		{ text: '已经点赞收藏了', left: 0, top: 350, duration: 3 },
-		{ text: '写的太好了！', left: 0, top: 300, duration: 5 },
-		{ text: '有效果！', left: 0, top: 150, duration: 7 },
-		{ text: '感谢博主', left: 0, top: 200, duration: 4 },
-		{ text: '太棒了！', left: 0, top: 100, duration: 3 },
+		// { text: '已经点赞收藏了', left: 0, top: 1000, duration: 3 },
+		// { text: '写的太好了！', left: 0, top: 300, duration: 5 },
+		// { text: '有效果！', left: 0, top: 150, duration: 7 },
+		// { text: '感谢博主', left: 0, top: 200, duration: 4 },
+		// { text: '太棒了！', left: 0, top: 100, duration: 10 },
 	]);
 	
 	const removeDanmaku = (index) => {
@@ -169,6 +185,14 @@
 	
 	const title = ref("");
 	const summary = ref("");
+	const commentsCount = ref(0);
+	const likes = ref(0);
+	const stars = ref(0);
+	const createTime = ref();
+	const updateTime = ref();
+	const view_count = ref();
+	const author = ref();
+	const avatar = ref();
 	
 	const getDetailsContent = async () => {
 		// 获取文章信息
@@ -178,7 +202,14 @@
 		detailsContent.value = md.render(response.data.content);
 		title.value = response.data.title;
 		summary.value = response.data.summary;
-		// console.log(response.data);
+		likes.value = response.data.likes;
+		stars.value = response.data.stars;
+		createTime.value = response.data.createTime;
+		updateTime.value = response.data.updateTime;
+		view_count.value = response.data.view_count;
+		author.value = response.data.author;
+		avatar.value = response.data.avatar;
+		console.log(response.data);
 	}
 	
 	const exportToPDF = () => {
@@ -201,48 +232,135 @@
 	const isStared = ref(false);
 	
 	// 点赞功能
-	const likeDetail = () => {
-		isLiked.value ? isLiked.value = false : isLiked.value = true;
+	const likeDetail = async () => {
+		// 点赞功能
+		const response = await post("/likeDetail", {
+			"detailsId": detailsId.value,
+			"userId": localStorage.getItem("userId")
+		})
+		console.log(response);
+		if(response.code == 200){
+			isLiked.value ? likes.value-- : likes.value++;
+			// 切换主题
+			isLiked.value ? isLiked.value = false : isLiked.value = true;
+		}else {
+			ElMessage(response.msg);
+		}
 	}
 	// 收藏功能
-	const starDetail = () => {
-		isStared.value ? isStared.value = false : isStared.value = true;
+	const starDetail = async () => {
+		const response = await post("/starDetail", {
+			"detailsId": detailsId.value,
+			"userId": localStorage.getItem("userId")
+		})
+		console.log(response);
+		if(response.code == 200){
+			isStared.value ? stars.value-- : stars.value++;
+			// 切换主题
+			isStared.value ? isStared.value = false : isStared.value = true;
+		}else {
+			ElMessage(response.msg);
+		}
 	}
 	
 	const isCommentPanelOpen = ref(false);
-	const newComment = ref('')
+	const newComment = ref('');
 	const comments = ref([
-		{ user: '用户1', text: '这是一条评论内容', time: '2023-01-01 12:00' },
-		{ user: '用户2', text: '这是另一条评论内容', time: '2023-01-02 13:00' },
-		{ user: '用户1', text: '这是一条评论内容', time: '2023-01-01 12:00' },
-		{ user: '用户1', text: '这是一条评论内容', time: '2023-01-01 12:00' },
-		{ user: '用户1', text: '这是一条评论内容', time: '2023-01-01 12:00' },
-		{ user: '用户1', text: '这是一条评论内容', time: '2023-01-01 12:00' },
-		{ user: '用户1', text: '这是一条评论内容', time: '2023-01-01 12:00' },
-		{ user: '用户1', text: '这是一条评论内容', time: '2023-01-01 12:00' },
-		{ user: '用户1', text: '这是一条评论内容', time: '2023-01-01 12:00' },
-		{ user: '用户1', text: '这是一条评论内容', time: '2023-01-01 12:00' }
-	])
+		// author, authorId, avatar, content, createTime, id
+		// { author: '清蒸甲壳虫', comment: '这是一条评论内容', createTime: '2023-01-01 12:00' },
+		// { author: '清蒸甲壳虫', comment: '这是另一条评论内容', createTime: '2023-01-02 13:00' },
+		// { author: '清蒸甲壳虫', comment: '这是一条评论内容', createTime: '2023-01-01 12:00' }
+	]);
 	
 	const commentDetail = () => {
 		isCommentPanelOpen.value = !isCommentPanelOpen.value;
-		console.log("进入评论区");
+		// getComments();
 	}
 	
-	const submitComment = () => {
-		if (newComment.value.trim()) {
-			comments.value.unshift({
-				user: '当前用户',
-				text: newComment.value,
-				time: new Date().toLocaleString()
+	const getComments = async () => {
+		// 获取评论列表
+		const response = await post("/getCommentsList",{
+			"detailsId": detailsId.value,
+		});
+		console.log(response);
+		if(response.code == 200){
+			comments.value = response.data;
+		}else {
+			ElMessage(response.msg);
+		}
+	}
+	
+	const getCommentsDanmakus = async () => {
+		// 获取弹幕数据
+		// const danmakus = ref([{ text: '已经点赞收藏了', left: 0, top: 350, duration: 3 },]);
+		const response = await post("/getCommentsDanmakus",{
+			"detailsId": detailsId.value,
+		});
+		console.log(response);
+		if(response.code == 200){
+			danmakus.value = response.data;
+		}else {
+			ElMessage(response.msg);
+		}
+	}
+	
+	const submitComment = async () => {
+		if (newComment.value.trim()) { // 移除字符串两端的空白字符
+			checkIsLogin();
+			// 将评论保存到数据库
+			// params: [ 文章id, 用户id, 用户评论内容 ]
+			const response = await post("/addComment", {
+				"detailsId": detailsId.value,
+				"userId": localStorage.getItem("userId"),
+				"comment": newComment.value
 			})
-			newComment.value = ''
-			// 这里可以添加API调用来保存评论到服务器
+			console.log(response);
+			if(response.code == 200){
+				// 添加评论成功
+				comments.value.unshift({ // 在队首添加评论信息
+					author: localStorage.getItem("userNickname"),
+					comment: newComment.value,
+					createTime: new Date().toLocaleString()
+				})
+				newComment.value = ''
+			}else {
+				ElMessage(response.msg);
+			}
+		}else {
+			ElMessage("请输入评论内容");
+		}
+	}
+	
+	const checkIsLogin = async () => {
+		try{
+			const response = await get('/checkIsLogin');
+		} catch (error) {
+			console.error('未登录:', error);
+		}
+	}
+	
+	const checkIslikeANDIsStar = async () => {
+		// 查询是否点赞和收藏
+		// 如果未登录，则不用查询
+		if(localStorage.getItem("userId") != null){
+			const response = await post("/checkIslikeANDIsStar",{
+				"detailsId": detailsId.value,
+				"userId": localStorage.getItem("userId")
+			})
+			if(response.code == 200){
+				response.data.isLike == 1 ? isLiked.value = true : isLiked.value = false;
+				response.data.isStar == 1 ? isStared.value = true : isStared.value = false;
+			}else {
+				ElMessage(response.msg);
+			}
 		}
 	}
 	
 	onMounted(() => {
 		getDetailsContent();
+		getComments();
+		getCommentsDanmakus();
+		checkIslikeANDIsStar();
 	})
 </script>
 
@@ -283,6 +401,7 @@
 		max-width: 1050px;
 		background-color: white;
 		min-height: 1000px;
+		margin-bottom: 200px;
 	}
 	.extraFuncButtom {
 		display: flex;
@@ -442,10 +561,11 @@
 	}
 	
 	.comment-input-area textarea {
+		font-size: 16px;
 		width: 100%;
 		height: 100px;
 		padding: 10px 10px 0 10px;
-		border-radius: 8px 8px 0 0; /* 依次是左上、右上、右下、左下 */
+		border-radius: 8px 8px 8px 8px; /* 依次是左上、右上、右下、左下 */
 		resize: none;
 		background-color: rgba(248,249,251,0.8);
 		border: none;

@@ -54,10 +54,12 @@
 				// sessionStorage.setItem("userName",username.value.value);
 				localStorage.setItem("userName",username.value.value);
 				// 获取并储存用户id
-				const response01 = await get('/getUserId',{
+				const response01 = await get('/getUserInfo',{
 					"userName": username.value.value
 				})
-				localStorage.setItem("userId",response01.data);
+				localStorage.setItem("userId",response01.data.id);
+				localStorage.setItem("userNickname",response01.data.nickName);
+				localStorage.setItem("avatar",response01.data.avatar);
 				// 确保 token 存储完成后再跳转
 				// console.log("登录成功，正在跳转01");
 				ElMessage({

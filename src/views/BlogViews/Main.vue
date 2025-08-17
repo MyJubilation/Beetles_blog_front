@@ -1,5 +1,38 @@
 <template>
-	<div>
+	<div class="topType">
+		<!-- <div style="display: flex; align-items: center; margin-top: 0px;">
+			<el-select
+			    v-model="tabsInputvalue"
+			    filterable
+			    placeholder="请输入标签"
+			    style="width: 240px; margin-top: 0px; margin-right: 10px;"
+			  >
+			    <el-option
+			      v-for="item in tabs"
+			      :key="item.value"
+			      :label="item.label"
+			      :value="item.value"
+			    />
+			  </el-select>
+			<button class="addTabsButtom" @click="addTab(topTabsValue, tabsInputvalue)">添加</button>
+		</div> -->
+		<el-tabs 
+			v-model="activeName" 
+			type="card"
+			class="tabsTitle"
+			@tab-click="topTitleClick"
+			@tab-remove="removeTab">
+			<el-tab-pane
+			      v-for="item in topTitleList"
+			      :key="item.name"
+			      :label="item.title"
+			      :name="item.name"
+			    >
+			      
+			    </el-tab-pane>
+		  </el-tabs>
+	</div>
+	<div style="margin-top: 60px;">
 		<img src="../../assets/像素画风景01.gif" style="height: 100px; width: 100%; pointer-events: none; min-width: 885px;" />
 	</div>
 	<div class="article-box" v-for="item in articleList">
@@ -46,7 +79,6 @@
 </template>
 
 <script setup>
-	
 	import { ref, onMounted } from 'vue';
 	import Header from '../../views/Header.vue';
 	import { post, get } from '../../request';
@@ -58,6 +90,113 @@
 	const currentPage = ref(1);
 	const pageSize = ref(20); // TODO 暂定为10，生产环境时改为20
 	const totalDetailsSize = ref(0);
+	
+	// 顶部标签页
+	const topTabsValue = ref('0');
+	const topTitleClick = async (tab, event) => {
+	  // console.log(tab, event);
+	  // console.log(tab.props); // 通常 tab 的属性在 props 对象里
+	  // console.log(tab.paneName); // 或者 paneName
+	  // ----------------------
+	  // 标签名称title:tab.props.label,数据库名称name:tab.props.name
+	  // 获取标签名称，发送请求后端查询
+	  // 将页数设为首页
+	  currentPage.value = 1;
+	  console.log(tab.props);
+	  getDetailsInfoList(tab.props.name);
+	}
+	const topTitleList = ref([
+	  // {
+	  //   title: '全部',
+	  //   name: 'all',
+	  // },{
+	  //   title: '前端',
+	  //   name: '2',
+	  // },{
+	  //   title: '后端',
+	  //   name: '3',
+	  // },{
+	  //   title: 'Vue',
+	  //   name: '4',
+	  // },{
+	  //   title: 'Java',
+	  //   name: '5',
+	  // }
+	])
+	const addTab = (targetName, tabName) => {
+		// TODO
+		// 检查是否值为空
+		// 检查是否已存在
+		// 添加tab
+		// 后端查询，修改文章列表
+	  const newTabName = `${++targetName}`;
+	  console.log(newTabName);
+	  topTitleList.value.push({
+	    title: tabName,
+	    name: newTabName,
+	    // content: 'New Tab content',
+	  })
+	  topTabsValue.value = newTabName
+	}
+	const removeTab = (targetName) => {
+	  const tabs = topTitleList.value
+	  let activeName = topTabsValue.value
+	  if (activeName === targetName) {
+	    tabs.forEach((tab, index) => {
+	      if (tab.name === targetName) {
+	        const nextTab = tabs[index + 1] || tabs[index - 1]
+	        if (nextTab) {
+	          activeName = nextTab.name
+	        }
+	      }
+	    })
+	  }
+	
+	  topTabsValue.value = activeName
+	  topTitleList.value = tabs.filter((tab) => tab.name !== targetName)
+	}
+	
+	// 顶部标签搜索
+	const tabsInputvalue = ref('');
+	const tabs = [
+	  {
+	    value: 'Option1',
+	    label: 'Option1',
+	  },
+	  {
+	    value: 'Option2',
+	    label: 'Option2',
+	  },
+	  {
+	    value: 'Option3',
+	    label: 'Option3',
+	  },
+	  {
+	    value: 'Option4',
+	    label: 'Option4',
+	  },
+	  {
+	    value: 'Option5',
+	    label: 'Option5',
+	  },
+	  {
+	    value: 'Option6',
+	    label: 'Option6',
+	  },
+	  {
+	    value: 'Option7',
+	    label: 'Option7',
+	  },
+	  {
+	    value: 'Option8',
+	    label: 'Option8',
+	  },
+	  {
+	    value: 'Option9',
+	    label: 'Option9',
+	  },
+	]
+	
 	
 	const viewCount = ref(0);
 	
@@ -93,7 +232,7 @@
 		
 	};
 	
-	const getDetailsInfoList = async () => {
+	const getDetailsInfoList = async (typeName) => {
 		console.log("获取文章数据列表");
 		// if(currentPage == null){
 		// 	currentPage.value = 1;
@@ -101,11 +240,13 @@
 		// 进行查询
 		try{
 			// params: 页数，每页条数
-			console.log(currentPage.value + "  " + pageSize.value);
+			// console.log(currentPage.value + "  " + pageSize.value);
+			console.log(typeName);
 			const response = await post('/getDetailsInfoList',{
 				"pageSize": pageSize.value,
 				"currentPage": currentPage.value,
-				"userId": localStorage.getItem("userId")
+				"userId": localStorage.getItem("userId"),
+				"type": typeName
 			});
 			
 			// const list = response.data.listInfo;
@@ -169,8 +310,15 @@
 		}
 	}
 	
+	const selectTopTags = async () => {
+		const response = await get("/getTags");
+		// console.log(response.data);
+		topTitleList.value = response.data;
+	}
+	
 	onMounted(() => {
-		getDetailsInfoList();
+		getDetailsInfoList("all");
+		selectTopTags();
 	});
 </script>
 
@@ -181,6 +329,39 @@
 		display: flex;
 		/* justify-content: center; */
 		
+	}
+	
+	.topType {
+		position: fixed;
+		width: 100%;
+		height: 50px;
+		background-color: white;
+		/* box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); */
+		display: flex;
+		align-items: flex-start;
+	}
+	
+	.tabsTitle {
+		width: 1640px;
+		/* margin-right: 30px; */
+	}
+	
+	/* .tabsTitle > .el-tabs__content {
+	  padding: 32px;
+	  color: #6b778c;
+	  font-size: 32px;
+	  font-weight: 600;
+	} */
+	.addTabsButtom {
+		height: 30px;
+		margin-right: 40px;
+		border: 1px solid #e5e5e5;
+		background-color: #f3f3f3;
+		border-radius: 5px;
+	}
+	.addTabsButtom:hover {
+		color: #68A88B;
+		cursor: pointer;
 	}
 	
 	::-webkit-scrollbar {

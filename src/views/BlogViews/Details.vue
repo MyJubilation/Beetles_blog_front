@@ -209,7 +209,7 @@
 		view_count.value = response.data.view_count;
 		author.value = response.data.author;
 		avatar.value = response.data.avatar;
-		console.log(response.data);
+		// console.log(response.data);
 	}
 	
 	const exportToPDF = () => {
@@ -238,7 +238,7 @@
 			"detailsId": detailsId.value,
 			"userId": localStorage.getItem("userId")
 		})
-		console.log(response);
+		// console.log(response);
 		if(response.code == 200){
 			isLiked.value ? likes.value-- : likes.value++;
 			// 切换主题
@@ -253,7 +253,7 @@
 			"detailsId": detailsId.value,
 			"userId": localStorage.getItem("userId")
 		})
-		console.log(response);
+		// console.log(response);
 		if(response.code == 200){
 			isStared.value ? stars.value-- : stars.value++;
 			// 切换主题
@@ -282,7 +282,7 @@
 		const response = await post("/getCommentsList",{
 			"detailsId": detailsId.value,
 		});
-		console.log(response);
+		// console.log(response);
 		if(response.code == 200){
 			comments.value = response.data;
 		}else {
@@ -296,7 +296,7 @@
 		const response = await post("/getCommentsDanmakus",{
 			"detailsId": detailsId.value,
 		});
-		console.log(response);
+		// console.log(response);
 		if(response.code == 200){
 			danmakus.value = response.data;
 		}else {
@@ -314,7 +314,7 @@
 				"userId": localStorage.getItem("userId"),
 				"comment": newComment.value
 			})
-			console.log(response);
+			// console.log(response);
 			if(response.code == 200){
 				// 添加评论成功
 				comments.value.unshift({ // 在队首添加评论信息
@@ -356,11 +356,26 @@
 		}
 	}
 	
+	const addHistory = async (type) => {
+		// console.log("ENTER addHistory");
+		// 查询用户是否登录
+		if(localStorage.getItem("userId")!=null){
+			// 新增历史记录
+			const response = await post("/addHistory",{
+				"userId": localStorage.getItem("userId"),
+				"articleId": detailsId.value,
+				"type": type
+			})
+			// console.log("response:",response.data.msg);
+		}
+	}
+	
 	onMounted(() => {
 		getDetailsContent();
 		getComments();
 		getCommentsDanmakus();
 		checkIslikeANDIsStar();
+		addHistory("details");
 	})
 </script>
 
@@ -393,15 +408,22 @@
 		border-radius: 5px;
 		margin-top: 20px;
 		background-color: white;
-		max-width: 1050px;
+		width: 1050px;
 		padding: 26px;
 	}
 	.content {
 		/* border: 1px solid black; */
-		max-width: 1050px;
+		max-width: 100%;
 		background-color: white;
-		min-height: 1000px;
+		min-height: 950px;
 		margin-bottom: 200px;
+	}
+	/* 使用深度选择器来影响 v-html 内容 */
+	::v-deep .content p img {
+	  max-width: 1000px;
+	  height: auto;
+	  border-radius: 5px;
+	  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 	}
 	.extraFuncButtom {
 		display: flex;
@@ -463,6 +485,9 @@
 	@media (max-width: 1650px) {
 		.details {
 			max-width: 850px;
+		}
+		::v-deep .content p img {
+		  max-width: 800px;
 		}
 	}
 	@media (max-width: 1500px) {

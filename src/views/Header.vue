@@ -91,14 +91,15 @@
 	
 	/* 置顶状态（滚动后激活） */
 	.header-sticky {
-	  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); /* 悬浮阴影（可选） */
+	 /* 悬浮阴影 */
+	  /* box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); */
 	}
 	
 	/* 下滑后显示底部边框线 */
 	.header-border {
 		background-color: white;
-		transition: background-color 0.5s ease;
-		border-bottom-color: #e5e7eb; /* 浅灰色边框 */
+		/* transition: background-color 0.5s ease; */
+		border-bottom-color: #e5e7eb;
 	}
 	
 	/* 导航内容布局 */

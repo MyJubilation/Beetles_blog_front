@@ -39,19 +39,83 @@
 			<div class="sendDetailsScroll">
 				<el-tooltip
 				        effect="dark"
-				        content="输入内容后按下Enter键可设置为标签 标签按住可拖动"
+				        content="标签最多可选6个"
 				        placement="left"
 				      >
 							<span style="font-size: 16px;">文章标签<el-icon><Warning /></el-icon></span>
 				      </el-tooltip>
-				<el-input-tag
+				<!-- <el-input-tag
 				    v-model="detailsInfo.tags"
 				    placeholder="支持不多于10个标签"
 				    aria-label="Please click the Enter key after input"
 					style="width: 600px; margin-left: 20px;"
 					max="10"
 					draggable
-				  />
+				  /> -->
+				<button class="addTagsButtom" @click="()=>{isAddTagsDialogOpen?isAddTagsDialogOpen=false:isAddTagsDialogOpen=true}">
+					<el-icon><Plus /></el-icon>
+					<span style="margin-left: 4px;">添加文章标签</span>
+				</button>
+				<el-dialog
+				    v-model="isAddTagsDialogOpen"
+				    title="标签"
+				    width="600"
+					style="height: 540px;"
+				  >
+				    <div style="height: 360px; padding: 10px;">
+						<div style="display: flex;">
+							<el-select
+							        v-model="tagsInputValue"
+							        multiple
+							        filterable
+							        remote
+							        reserve-keyword
+							        placeholder="请输入文字进行搜索"
+							        :remote-method="selectTags"
+							        :loading="loading"
+							        style="width: 100%;"
+									clearable
+							      >
+							        <el-option
+							          v-for="item in options"
+							          :key="item.value"
+							          :label="item.label"
+							          :value="item.value"
+							        />
+							      </el-select>
+							<button @click="sendTagsToList" class="sendTagsToListButton">确认</button>
+						</div>
+						<div class="TagsRecommend">
+								<el-scrollbar height="400px" style="min-width: 160px;">
+									<div v-for="item in tagsList" class="typeNaviList"
+									 :class="{ 'selected-tag': selectedTag === item.name }"
+									 @click="changeTagContentList(item.name)">
+										<span>{{ item.title }}</span>
+									</div>
+								</el-scrollbar>
+							<div class="typeContent">
+								<span style="width: 100%;">添加标签</span>
+								<span v-for="item in tagContentList"
+									class="typeContentButton"
+									@click="chooseTag(item.content)">
+									{{item.content}}
+								</span>
+							</div>
+						</div>
+					</div>
+				  </el-dialog>
+			</div>
+			<div class="sendDetailsScroll">
+				<div style="margin-left: 100px;display: flex; flex-wrap: wrap; gap: 20px;">
+					<el-tag v-for="(tag, index) in tagsInputValue"
+						closable
+						@close="removeCurrentTag(index)"
+						type="success"
+						class="tagListNavi"
+						effect="light">
+						{{ tag }}
+					</el-tag>
+				</div>
 			</div>
 			<div class="sendDetailsScroll">
 				<el-tooltip
@@ -78,14 +142,14 @@
 			</div> -->
 			<div class="sendDetailsScroll">
 				<span style="font-size: 16px;">文章类型</span>
-				<el-radio-group v-model="detailsType" style="margin-left: 20px;">
+				<el-radio-group v-model="detailsType" style="margin-left: 36px;">
 				      <el-radio value="1" size="large">原创</el-radio>
 				      <el-radio value="2" size="large">转载</el-radio>
 				    </el-radio-group>
 			</div>
 			<div class="sendDetailsScroll">
 				<span style="font-size: 16px;">可见范围</span>
-				<el-radio-group v-model="visibility" style="margin-left: 20px;">
+				<el-radio-group v-model="visibility" style="margin-left: 36px;">
 				      <el-radio value="1" size="large">全部可见</el-radio>
 				      <el-radio value="2" size="large">仅我可见</el-radio>
 				      <el-radio value="3" size="large">仅粉丝可见</el-radio>
@@ -118,6 +182,7 @@
 	import { sleep } from '../../axios';
 	
 	const isSendDialogOpen = ref(false);
+	const isAddTagsDialogOpen = ref(false);
 	
 	// 文章类型（原创，转载）
 	const detailsType = ref("1");
@@ -174,6 +239,7 @@
 		// 设置文章类型和可见范围
 		detailsInfo.value.type = detailsType.value;
 		detailsInfo.value.visibility = visibility.value;
+		detailsInfo.value.tags = tagsInputValue.value;
 		// isSendDialogOpen.value = false;
 		// console.log(localStorage.getItem("userId"));
 		// 验证输入数据是否合规
@@ -205,8 +271,123 @@
 		}
 	}
 	
+	// -----------文章 start 标签--------------
+	const tagsInputValue = ref<string[]>([]);
+	const loading = ref(false);
+	interface ListItem {
+	  value: string
+	  label: string
+	}
+	const tagsList = ref([]);
+	
+	const list = ref<ListItem[]>([])
+	const options = ref<ListItem[]>([])
+	const selectTags = (query: string) => {
+		console.log("query:",query);
+		console.log("list:",list);
+		if (query) {
+				loading.value = true;
+				setTimeout(() => {
+					loading.value = false
+					// 进行筛选，筛选出所有符合Query字段的数据列表
+					options.value = list.value.filter((item) => {
+						return item.label.toLowerCase().includes(query.toLowerCase())
+					})
+				  
+					//  判断是否已经到达最大标签数量
+					if(tagsInputValue.value.length > MAX_TAG_LENGTH){
+						ElMessage("已达最大标签数量，请勿多选");
+						// 删除多的那个
+						tagsInputValue.value.pop();
+					}else {
+						// 未溢出时的功能
+					}
+					console.log("options:",options.value);
+					console.log("tagsInputValue:",tagsInputValue);
+				}, 200)
+		} else {
+			options.value = []
+		}
+	}
+	
+	const sendTagsToList = () => {
+		console.log(tagsInputValue.value);
+		
+		// 关闭标签弹窗
+		isAddTagsDialogOpen.value = false;
+	}
+	
+	// 顶部搜索栏数据
+	const states = ref([
+		// {"content": 'Python', "tag": 'Python'},
+		// {"content": 'backend', "tag": '后端'},
+		// {"content": 'front', "tag": '前端'},
+	]);
+	
+	// 下方标签栏数据
+	const tag = ref([]);
+	
+	const getTagList = async () => {
+		const response = await get("/getTagList");
+		console.log(response.data);
+		tagsList.value = response.data;
+	}
+	
+	const getStatusList = async () => {
+		const response = await get("/getStatusList");
+		console.log(response.data);
+		states.value = response.data;
+		// console.log(states.value);
+		// 设置list值
+		list.value = states.value.map((item) => {
+		    return { value: `${item.tag}:${item.content}`, label: `${item.content}` }
+		  })
+	}
+	const tagContentList = ref([]);
+	const selectedTag = ref(null);
+	const changeTagContentList = (name) => {
+		selectedTag.value = name;
+		// 更新子标签内容
+		// tagContentList.value = tagsList.value.content;
+		const tag = tagsList.value.find(tag => tag.name === name);
+		
+		if (tag) {
+		  tagContentList.value = tag.content;
+		// console.log(tagContentList.value)
+		} else {
+		  console.warn("未找到分类");
+		}
+	}
+	
+	const MAX_TAG_LENGTH = 6;// 标签最大数量
+	
+	const chooseTag = (value) => {
+		console.log("value",value);
+		console.log("selectedTag",selectedTag.value);
+		// 标签大类：selectedTag.value，子标签内容：value
+		const tag = selectedTag.value;
+		const content = value;
+		// 查询是否重复
+		if(tagsInputValue.value.includes(`${tag}:${content}`)){
+			// 重复之后的功能
+			ElMessage("标签重复，请重新选择！")
+		}else {
+			// 点击后将数据保存到上方搜索栏中
+			tagsInputValue.value = [...tagsInputValue.value, `${tag}:${content}`];
+			selectTags(content);
+			
+		}
+	}
+	
+	const removeCurrentTag = (index) => {
+		console.log("123:",index);
+		tagsInputValue.value.splice(index, 1);
+	}
+	
+	// -----------文章 end 标签--------------
+	
 	onMounted(() => {
-	  vditor.value = new Vditor('vditor', {
+		vditor.value = new Vditor('vditor', {
 			height:865,
 			width:1998,
 			toolbar:['headings','bold','italic','strike','|','line','quote','list',
@@ -217,9 +398,11 @@
 			  // vditor.value is a instance of Vditor now and thus can be safely used here
 			  // vditor.value!.setValue('Vue Composition API + Vditor + TypeScript Minimal Example');
 			},
-	  });
-	  // console.log(detailsInfo.value.title);
+		});
+		// console.log(detailsInfo.value.title);
 		checkIsLogin();
+		getStatusList();
+		getTagList();
 	});
 	
 </script>
@@ -298,4 +481,88 @@
 		color: #3C3D43;
 		transition: color 0.3s ease;
 	}
+	
+	.addTagsButtom {
+		background-color: transparent;
+		border: 2px solid rgb(232, 232, 238);
+		border-radius: 4px;
+		width: 120px;
+		height: 28px;
+		margin-left: 20px;
+	}
+	.addTagsButtom:hover {
+		background-color: #F4F8FC;
+		border: 2px solid #CCE3F4;
+		color: #68A88B;
+		cursor: pointer;
+	}
+	.TagsRecommend {
+		width: 550px;
+		height: 400px;
+		display: flex;
+		margin-top: 10px;
+		/* background-color: #3C3D43; */
+	}
+	.sendTagsToListButton {
+		height: 32px;
+		width: 50px;
+		background-color: transparent;
+		border: 1px #CCE3F4 solid;
+		border-radius: 4px;
+	}
+	.sendTagsToListButton:hover {
+		color: #58C9B9;
+		border: 1px #58C9B9 solid;
+		cursor: pointer;
+	}
+	.typeNaviList {
+		height: 30px;
+		margin: 3px 0px;
+	}
+	.typeNaviList:active {
+		color: #68A88B;
+	}
+	.typeNaviList:hover {
+		cursor: pointer;
+		color: #68A88B;
+	}
+	.selected-tag span {
+	    color: #507999!important;
+	}
+
+	.typeContentButton {
+		height: 32px;
+		line-height: 32px;
+		padding: 0 12px;
+		/* background-color: #f0f0f0; */
+		background-color: #EBF2F7;
+		/* border-radius: 16px; */
+		font-size: 14px;
+		color: #333;
+		cursor: pointer;
+		transition: all 0.2s ease;
+		display: inline-block;
+		white-space: nowrap;
+	}
+	.typeContentButton:hover {
+		/* background-color: #e0e0e0; */
+		box-shadow: 1px 1px 2px #999, -1px -1px 2px #eee;
+	}
+	.typeContent {
+		max-width: 400px;
+		display: flex;
+		flex-wrap: wrap;
+		gap: 8px;
+		padding: 8px;
+		overflow-y: auto;
+		
+		/* 注释后将不显示滚动条，需配合下方::-webkit-scrollbar使用 */
+		/* scrollbar-width: thin;
+		scrollbar-color: #DDDEE0 #ffffff; */
+	}
+	.typeContent::-webkit-scrollbar {
+		width: 10px;
+		height: 20px;
+	}
+	
 </style>

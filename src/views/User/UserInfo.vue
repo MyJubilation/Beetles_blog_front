@@ -15,25 +15,57 @@
 		</el-divider>
 		<div class="basicInfo">
 			<div class="infoRow">
-				<span class="infoTitle">用户昵称</span>：<span class="infoContent">{{ userInfo.userNickname }}</span>
+				<span class="infoTitle">用户昵称</span>：<span class="infoContent">
+					{{ userInfo.userNickname }}
+					<div @click="editBasicInfo('用户昵称')">
+						<el-icon><Edit /></el-icon>
+						<span>编辑</span>
+					</div>
+				</span>
 			</div>
 			<div class="infoRow">
-				<span class="infoTitle">用户名</span>：<span class="infoContent">{{ userInfo.userName }}</span>
+				<span class="infoTitle">用户名</span>：<span class="infoContent">
+					{{ userInfo.userName }}
+				</span>
 			</div>
 			<div class="infoRow">
 				<span class="infoTitle">用户ID</span>：<span class="infoContent">{{ userInfo.userId }}</span>
 			</div>
 			<div class="infoRow">
-				<span class="infoTitle">性别</span>：<span class="infoContent">{{ userInfo.sex === 0 ? '男' : (userInfo.sex === 1 ? '女' : '未知') }}</span>
+				<span class="infoTitle">性别</span>：<span class="infoContent">
+					{{ userInfo.sex === 0 ? '男' : (userInfo.sex === 1 ? '女' : '未知') }}
+					<div @click="editBasicInfo('性别')">
+						<el-icon><Edit /></el-icon>
+						<span>编辑</span>
+					</div>
+				</span>
 			</div>
 			<div class="infoRow">
-				<span class="infoTitle">个人简介</span>：<span class="infoContent" :style="{ color: userInfo.bio ? 'black' : '#a3a3a3' }">{{ userInfo.bio == ''? '没有填写个人简介哦' : userInfo.bio }}</span>
+				<span class="infoTitle">个人简介</span>：<span class="infoContent" :style="{ color: userInfo.bio ? 'black' : '#a3a3a3' }">
+					{{ userInfo.bio == ''? '没有填写个人简介哦' : userInfo.bio }}
+					<div @click="editBasicInfo('个人简介')">
+						<el-icon><Edit /></el-icon>
+						<span>编辑</span>
+					</div>
+				</span>
 			</div>
 			<div class="infoRow">
-				<span class="infoTitle">邮箱</span>：<span class="infoContent" :style="{ color: userInfo.email ? 'black' : '#a3a3a3' }">{{ userInfo.email == ''? '未填写' : userInfo.email }}</span>
+				<span class="infoTitle">邮箱</span>：<span class="infoContent" :style="{ color: userInfo.email ? 'black' : '#a3a3a3' }">
+					{{ userInfo.email == ''? '未填写' : userInfo.email }}
+					<div @click="editBasicInfo('邮箱')">
+						<el-icon><Edit /></el-icon>
+						<span>编辑</span>
+					</div>
+				</span>
 			</div>
 			<div class="infoRow">
-				<span class="infoTitle">电话号码</span>：<span class="infoContent" :style="{ color: userInfo.phonenumber ? 'black' : '#a3a3a3' }">{{ userInfo.phonenumber == ''? '未填写' : userInfo.phonenumber }}</span>
+				<span class="infoTitle">电话号码</span>：<span class="infoContent" :style="{ color: userInfo.phonenumber ? 'black' : '#a3a3a3' }">
+					{{ userInfo.phonenumber == ''? '未填写' : userInfo.phonenumber }}
+					<div @click="editBasicInfo('电话号码')">
+						<el-icon><Edit /></el-icon>
+						<span>编辑</span>
+					</div>
+				</span>
 			</div>
 			<div class="infoRow">
 				<span class="infoTitle">创建时间</span>：<span class="infoContent">{{ userInfo.createTime }}</span>
@@ -62,6 +94,10 @@
 		userId: 3, avatar: "https://beetles-1.oss-cn-chengdu.aliyuncs.com/%E7%94%B2%E5%A3%B3%E8%99%AB%20LOGO.png", userNickname: "甲壳虫", 
 		userName: "beetles", sex: "2", bio: "", email: "121212@qqqq", phonenumber: "", createTime: "2025-06-10 16:18:03"
 	})
+	
+	const editBasicInfo = () => {
+		console.log("ENTER editBasicInfo");
+	}
 	
 	const checkIsLogin = async () => {
 		try{
@@ -107,5 +143,18 @@
 	.infoContent {
 		flex: 1;
 		margin-left: 10px;
+		display: flex;
+	}
+	.infoContent:hover div {
+		display: block;
+	}
+	.infoContent div {
+		display: none;
+		margin-left: 20px;
+		color: #0080ff;
+	}
+	.infoContent div:hover {
+		color: #4babff;
+		cursor: pointer;
 	}
 </style>

@@ -109,6 +109,10 @@ import router from '../../../router';
 </script>
 
 <style scoped>
+	/* body {
+		background-color: #F3F4F6;
+	} */
+	
 	.mainCss {
 		margin-left: 250px;
 		width: 100%;

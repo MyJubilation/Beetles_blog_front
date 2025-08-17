@@ -25,6 +25,11 @@ const constantRoutes = [
 		    path:'main',
 		    name:'main',
 		    component: () => import('../views/BlogViews/Main.vue')
+		  },
+		  {
+		    path:'viewHistory/:id',
+		    name:'viewHistory',
+		    component: () => import('../views/BlogViews/ViewHistory.vue')
 		  }
 		]
 	},

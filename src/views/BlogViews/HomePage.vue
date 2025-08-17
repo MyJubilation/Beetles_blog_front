@@ -22,10 +22,10 @@
 						<el-icon :size="24" class="aside-item-icon"><Connection /></el-icon>
 						<div class="aside-item-name">关注</div>
 					</a>
-					<a class="aside-item" href="#">
+					<router-link :to="`/homepage/viewHistory/${userId}`" class="aside-item">
 						<el-icon :size="24" class="aside-item-icon"><Clock /></el-icon>
 						<div class="aside-item-name">历史</div>
-					</a>
+					</router-link>
 					<a class="aside-item" href="#">
 						<el-icon :size="24" class="aside-item-icon"><Star /></el-icon>
 						<div class="aside-item-name">收藏</div>

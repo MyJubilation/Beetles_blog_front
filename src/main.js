@@ -16,6 +16,12 @@ for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
   app.component(key, component)
 }
 
+import zhCn from 'element-plus/es/locale/lang/zh-cn'
+
+app.use(ElementPlus, {
+  locale: zhCn,
+})
+
 app.use(router)
 app.use(ElementPlus)
 

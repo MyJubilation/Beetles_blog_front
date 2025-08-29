@@ -17,10 +17,51 @@
 			</div>
 			<div class="asideLeft">
 				<div class="asideBox">
-					<p>侧边左盒子1</p>
+					<div class="asideBox-userbox">
+						<router-link class="el-avatar-userImg" :to="`/user/${userShortInfo.userId}`" target="_blank">
+							<el-avatar :size="60" src="https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png"/>
+						</router-link>
+						<div style="margin-left: 8px;">
+							<router-link class="asideBox-userbox-username" :to="`/user/${userShortInfo.userId}`" target="_blank">{{ userShortInfo.userNickname }}</router-link>
+							<div style="display: flex; margin-top: 8px;">
+								<div class="asideBox-userbox-desc">
+									入站时间:
+									<span>
+										{{ userShortInfo.createTime!=null ? userShortInfo.createTime : "--" }}
+									</span>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="asideBox-userinfobox">
+						<div class="asideBox-userinfobox-item">
+							<router-link :to="`/user/${userShortInfo.userId}`" target="_blank">
+								<span class="asideBox-userinfobox-item-num">{{ userShortInfo.type }}</span>
+								<span class="asideBox-userinfobox-item-name">原创</span>
+							</router-link>
+						</div>
+						<div class="asideBox-userinfobox-item">
+							<span class="asideBox-userinfobox-item-num">{{ userShortInfo.likes }}</span>
+							<span class="asideBox-userinfobox-item-name">点赞</span>
+						</div>
+						<div class="asideBox-userinfobox-item">
+							<span class="asideBox-userinfobox-item-num">{{ userShortInfo.stars }}</span>
+							<span class="asideBox-userinfobox-item-name">收藏</span>
+						</div>
+						<div class="asideBox-userinfobox-item">
+							<span class="asideBox-userinfobox-item-num">
+								{{ userShortInfo.fans!=null ? userShortInfo.fans : "--" }}
+							</span>
+							<span class="asideBox-userinfobox-item-name">粉丝</span>
+						</div>
+					</div>
 				</div>
-				<div class="asideBox">
-					<p>侧边左盒子2</p>
+				<div class="asideBox" style="padding: 0px;">
+					<el-calendar>
+					    <template #header="{ date }">
+					      <span>{{ date }}</span>
+					    </template>
+					  </el-calendar>
 				</div>
 				<div class="asideBox">
 					<p>侧边左盒子3</p>
@@ -37,8 +78,20 @@
 				</div>
 				<div style="display: flex; justify-content: center; align-items: center;">
 					<el-icon size="20" style="margin-right: 10px;"><Clock /></el-icon>
-					<span style="color: #999ABB;">于<span style="font-size: 14px;">{{ createTime }}</span>发布</span>
-					<!-- <span v-if="updateTime!=createTime && updateTime!=null">于{{ updateTime }}修改</span> -->
+					<span style="color: #999ABB;">
+						于
+						<span style="font-size: 14px;">
+							{{ createTime }}
+						</span>
+						发布
+					</span>
+					<span v-if="updateTime!=createTime && updateTime!=null" style="color: #999ABB;margin-left: 20px;">
+						于
+						<span style="font-size: 14px;">
+							{{ updateTime }}
+						</span>
+						修改
+					</span>
 					<el-icon size="20" style="margin-left: 40px; margin-right: 10px;"><View /></el-icon>
 					<span style="color: #999ABB;">浏览量：<span style="font-size: 14px;">{{ view_count }}</span></span>
 				</div>
@@ -51,12 +104,26 @@
 					<!-- <el-icon><star-filled /></el-icon> -->
 					<span style="color: #b0b1b3; font-size: 18px;">正 文</span>
 				</el-divider>
-				<div v-html="detailsContent" class="content"></div>
+				<!-- <div v-html="detailsContent" class="content"></div> -->
+				<div class="content">
+					<MarkdownReader
+						:showToc="true"
+						:detailsId= "route.params.id"
+						title="我的Markdown文档"
+					/>
+				</div>
 				<div class="detailsBottonNavi">
 					<div style="margin-left: 20px; display: flex; align-items: center;">
 						<el-avatar style="height: 30px; width: auto;" src="https://beetles-1.oss-cn-chengdu.aliyuncs.com/%E7%94%B2%E5%A3%B3%E8%99%AB%20LOGO.png"></el-avatar>
-						<span style="margin-left: 8px; font-size: 16px; font-weight: 600;">藏宝阁的小师傅</span>
-						<button style="margin-left: 10px; border-radius: 20px; border: 2px solid #e5e5e5; background-color: white; height: 30px; width: 60px;">关注</button>
+						<span style="margin-left: 8px; font-size: 16px; font-weight: 600;">{{ userShortInfo.userNickname }}</span>
+						<button class="follow-button" @click="changeUserFollows()">
+							<div v-if="!isFollowed">
+								<span>关注</span>
+							</div>
+							<div v-else style="color: #999aaa; border-color: #555666;">
+								已关注
+							</div>
+						</button>
 					</div>
 					<div style="margin-left: 50%; display: flex;">
 						<div class="detailsBottonNavi-buttom" @click="likeDetail">
@@ -66,7 +133,7 @@
 						<!-- <div class="detailsBottonNavi-buttom">
 							<img src="@/assets/unlike-fill.svg" alt="图标" width="24" height="24">
 						</div> -->
-						<div class="detailsBottonNavi-buttom" @click="starDetail">
+						<div class="detailsBottonNavi-buttom" @click="()=>{getStarFolderList(); starDialogVisible = true;}">
 							<img :src="isStared ? staredFill : starFill" alt="收藏" width="24" height="24">
 							<span :style="{ color: isStared ? '#FD9983' : '#C3C2CC', marginLeft: '8px' }">{{ stars }}</span>
 						</div>
@@ -77,6 +144,38 @@
 					</div>
 				</div>
 			</div>
+			<el-dialog
+			    v-model="starDialogVisible"
+			    title="添加收藏夹"
+			    width="600"
+				style="height: 500px; padding: 20px;"
+			  >
+			  <div class="addNewStarFolderButton">
+				  <span>新建收藏夹</span>
+			  </div>
+			  <div class="addNewStarFolder-box">
+				  <div class="addNewStarFolder-box-item" v-for="item in folderList" @click="starDetail(item.id)">
+					  <div>
+							<div style="font-size: 14px; font-weight: 500; color: #555666; line-height: 20px;">
+								{{ item.folderName }}
+							</div>
+							<div style="font-weight: 400; color: #999aaa; line-height: 17px; margin-top: 8px; ">
+								{{ item.contentCount }}条内容
+							</div>
+					  </div>
+					  <div style="border: 1px solid black; height: 30px; width: 60px; border-radius: 16px;
+					              display: flex; align-items: center; justify-content: center;"
+					              :style="{
+					                color: folderId != item.id ? '#555666' : '#999aaa',
+					                background: folderId != item.id ? '#fff' : 'rgba(232, 232, 237, 0.3)',
+					                borderColor: folderId != item.id ? 'black' : '#e8e8ed'
+					              }">
+					    <span v-if="folderId !== item.id">收藏</span>
+					    <span v-else>已收藏</span>
+					  </div>
+				  </div>
+			  </div>
+			</el-dialog>
 			<div class="asideRight">
 				<div class="asideBox">
 					<div>
@@ -129,6 +228,22 @@
 		</div>
 		
 		<div id="overlay" class="overlay" :class="{ 'active': isCommentPanelOpen }" @click="commentDetail"></div>
+		
+		
+		<div class="copyright-box">
+			<div class="copyright-box-footer">
+				<div class="footer-colums-t">
+					<router-link :to="`/aboutme`" target="_blank" class="footer-colums-t-item">
+						<div style="color: inherit;">关于我</div>
+					</router-link>
+				</div>
+				<div class="footer-colums-b">
+					<a href="https://beian.miit.gov.cn/#/Integrated/index" class="footer-colums-b-item">
+						<div>蜀ICP备2024095321号-1</div>
+					</a>
+				</div>
+			</div>
+		</div>
 	</div>
 	
 </template>
@@ -152,6 +267,7 @@
 	import highlightJs from 'highlight.js'; // 使用 ES 模块导入
 	import { ElMessage } from 'element-plus';
 	import { sleep } from '../../axios';
+	import MarkdownReader from '../../lib/utils/MarkdownReader.vue';
 		
 	// top值范围[100,500]
 	// 弹幕取评论的前10条进行滚动
@@ -192,6 +308,7 @@
 	const updateTime = ref();
 	const view_count = ref();
 	const author = ref();
+	const authorId = ref();
 	const avatar = ref();
 	
 	const getDetailsContent = async () => {
@@ -208,8 +325,36 @@
 		updateTime.value = response.data.updateTime;
 		view_count.value = response.data.view_count;
 		author.value = response.data.author;
+		authorId.value = response.data.user_id;
 		avatar.value = response.data.avatar;
-		// console.log(response.data);
+		console.log("getDetailsContent",response.data);
+		// console.log(authorId.value);
+		
+		getUserShortInfo();
+		checkIsFollowed();
+		// getStarFolderList();
+	}
+	
+	const userShortInfo = ref({
+		avatar: '',
+		userId: '',
+		userNickname: '',
+		
+		views: 0,
+		type: 0,
+		createTime: '',
+		likes: 0,
+		comments: 0,
+		stars: 0
+	});
+	
+	const getUserShortInfo = async () => {
+		console.log(authorId.value);
+		const response = await post("/getUserShortInfo",{
+			"userId": authorId.value
+		});
+		console.log("getUserShortInfo",response.data);
+		userShortInfo.value = response.data;
 	}
 	
 	const exportToPDF = () => {
@@ -231,6 +376,8 @@
 	const isLiked = ref(false);
 	const isStared = ref(false);
 	
+	const starDialogVisible = ref(false);
+	
 	// 点赞功能
 	const likeDetail = async () => {
 		// 点赞功能
@@ -248,13 +395,15 @@
 		}
 	}
 	// 收藏功能
-	const starDetail = async () => {
+	const starDetail = async (folderId) => {
 		const response = await post("/starDetail", {
 			"detailsId": detailsId.value,
-			"userId": localStorage.getItem("userId")
+			"userId": localStorage.getItem("userId"),
+			"folderId": folderId
 		})
-		// console.log(response);
+		console.log(response);
 		if(response.code == 200){
+			starDialogVisible.value = false;
 			isStared.value ? stars.value-- : stars.value++;
 			// 切换主题
 			isStared.value ? isStared.value = false : isStared.value = true;
@@ -290,6 +439,28 @@
 		}
 	}
 	
+	const folderList = ref([
+		// {"folderName": "默认收藏夹", "contentCount": 12, "id": "123"},
+		// {"folderName": "学习", "contentCount": 2, "id": "123"}
+	])
+	
+	const folderId = ref("");
+	// 收藏夹列表获取
+	const getStarFolderList = async () => {
+		// 获取收藏夹列表
+		const response = await post("/getStarFolderList",{
+			"userId": localStorage.getItem("userId")
+		});
+		folderList.value = response.data;
+		const response1 = await post("/getFolderId",{
+			"detailsId": detailsId.value,
+			"userId": localStorage.getItem("userId")
+		});
+		folderId.value = response1.data;
+		
+		// console.log(response.data);
+	}
+	
 	const getCommentsDanmakus = async () => {
 		// 获取弹幕数据
 		// const danmakus = ref([{ text: '已经点赞收藏了', left: 0, top: 350, duration: 3 },]);
@@ -299,6 +470,7 @@
 		// console.log(response);
 		if(response.code == 200){
 			danmakus.value = response.data;
+			// console.log(danmakus.value);
 		}else {
 			ElMessage(response.msg);
 		}
@@ -370,6 +542,74 @@
 		}
 	}
 	
+	// ------------------ 关注功能 ----------------------
+	const isFollowed = ref(false);
+	
+	const checkIsFollowed = async () => {
+		if(localStorage.getItem("userId") != null && authorId.value != localStorage.getItem("userId")){
+			const response = await post("/checkIsFollowed",{
+				"userId": authorId.value,
+				"followerId": localStorage.getItem("userId")
+			});
+			console.log("checkIsFollowed:",response);
+			if(response.data == "1"){
+				// 已经关注，修改按钮文章，修改isFollowed值为true
+				isFollowed.value = true;
+			}
+		}
+		
+	}
+	
+	const changeUserFollows = async () => {
+		// 用户关注
+		if(isFollowed.value){
+			// 已经关注了，取消关注
+			// 判断是否id都为同一人
+			if(authorId.value == localStorage.getItem("userId")){
+				ElMessage("不能关注自己");
+			}else {
+				const response = await post("/removeUserFollows", {
+					"userId": authorId.value,
+					"followerId": localStorage.getItem("userId")
+				});
+				if(response.code == 200){
+					//  添加成功后的逻辑
+					isFollowed.value = false;
+					userShortInfo.value.fans--;
+					ElMessage({
+						message: response.msg,
+						type: 'success',
+					});
+				}else {
+					ElMessage(response.msg);
+				}
+			}
+		}else {
+			// userId:被关注的人id
+			// followerId:关注的人id
+			// 判断是否id都为同一人
+			if(authorId.value == localStorage.getItem("userId")){
+				ElMessage("不能关注自己");
+			}else {
+				const response = await post("/addUserFollows", {
+					"userId": authorId.value,
+					"followerId": localStorage.getItem("userId")
+				});
+				if(response.code == 200){
+					//  添加成功后的逻辑
+					isFollowed.value = true;
+					userShortInfo.value.fans++;
+					ElMessage({
+						message: response.msg,
+						type: 'success',
+					});
+				}else {
+					ElMessage(response.msg);
+				}
+			}
+		}
+	}
+	
 	onMounted(() => {
 		getDetailsContent();
 		getComments();
@@ -410,6 +650,7 @@
 		background-color: white;
 		width: 1050px;
 		padding: 26px;
+		margin-bottom: 24px;
 	}
 	.content {
 		/* border: 1px solid black; */
@@ -418,6 +659,20 @@
 		min-height: 950px;
 		margin-bottom: 200px;
 	}
+	
+	.follow-button {
+		margin-left: 10px;
+		border-radius: 20px;
+		border: 2px solid #e5e5e5;
+		background-color: white;
+		height: 30px;
+		width: 60px;
+	}
+	.follow-button:hover {
+		cursor: pointer;
+		border: 2px solid #9d9d9d;
+	}
+	
 	/* 使用深度选择器来影响 v-html 内容 */
 	::v-deep .content p img {
 	  max-width: 1000px;
@@ -482,6 +737,76 @@
 	/* .asideLeft .asideRight {
 	  font-size: 14px;
 	} */
+	
+	.asideBox-userbox {
+		width: 100%;
+		/* background-color: #68A88B; */
+		/* border: 1px solid black; */
+		height: 60px;
+		display: flex;
+	}
+	.el-avatar-userImg:hover {
+		cursor: pointer;
+	}
+	.asideBox-userbox-username {
+		color: #222226;
+		font-size: 18px;
+		font-weight: 600;
+		text-decoration: none;
+	}
+	.asideBox-userbox-username:hover {
+		cursor: pointer;
+	}
+	.asideBox-userbox-desc {
+		padding: 0 4px;
+		display: inline-block;
+		border-radius: 2px;
+		background: #f5f6f7;
+		color: #555666;
+		font-size: 13px;
+		font-style: normal;
+		font-weight: 400;
+	}
+	.asideBox-userinfobox {
+		display: flex;
+		height: 76px;
+		/* margin: 0 16px; */
+		margin-top: 16px;
+		border-radius: 2px;
+		background: #fafafa;
+		-webkit-box-align: center;
+		align-items: center;
+	}
+	.asideBox-userinfobox-item {
+		/* display: block; */
+		color: #555666;
+		-webkit-box-flex: 1;
+		flex: 1;
+		text-align: center;
+	}
+	.asideBox-userinfobox-item a {
+		text-decoration: none;
+	}
+	.asideBox-userinfobox-item a:hover {
+		cursor: pointer;
+		text-decoration: none;
+	}
+	.asideBox-userinfobox-item-num {
+		display: block;
+		/* width: 60px; */
+		color: #222226;
+		font-size: 15px;
+		font-weight: 500 !important;
+	}
+	.asideBox-userinfobox-item-name {
+		display: block;
+		/* width: 60px; */
+		margin-top: 4px;
+		color: #555666;
+		font-size: 13px;
+		font-weight: 400;
+	}
+	
 	@media (max-width: 1650px) {
 		.details {
 			max-width: 850px;
@@ -655,10 +980,108 @@
 		display: block;
 	}
 	
+	.copyright-box {
+		width: 100%;
+		background: #fff;
+	}
+	.copyright-box-footer {
+		margin: 0 auto;
+		/* width: 100%; */
+		min-width: 972px;
+		box-shadow: 0 -1px 0 0 rgba(0, 0, 0, .05);
+		background: #fff;
+		padding: 24px 34px 20px;
+	}
+	.footer-colums-t {
+		display: flex;
+		justify-content: center;
+		-webkit-box-pack: center;
+	}
+	.footer-colums-t-item {
+		margin: 0 8px;
+		color: #999aaa;
+		font-size: 14px;
+		height: 16px;
+		line-height: 16px;
+		display: flex;
+		-webkit-box-align: center;
+		align-items: center;
+	}
+	.footer-colums-t-item:hover {
+		cursor: pointer;
+	}
+	.footer-colums-b {
+		margin-top: 8px;
+		display: flex;
+		-webkit-box-pack: center;
+		justify-content: center;
+		flex-wrap: wrap;
+	}
+	.footer-colums-b-item {
+		font-size: 12px;
+		color: #999aaa;
+		height: 16px;
+		line-height: 16px;
+		margin: 4px 6px;
+		display: flex;
+		-webkit-box-align: center;
+		align-items: center;
+	}
+	
+	/* 深度绑定日历样式 */
+	::v-deep .el-calendar-table .el-calendar-day {
+	  height: 40px;
+	}
+	
 	@media (max-width: 768px) {
 		.comment-panel {
 			width: 100%;
 			right: -100%;
 		}
+	}
+	
+	.addNewStarFolderButton {
+		width: 520px;
+		background-color: #FAFAFA;
+		color: #555666;
+		padding: 0 20px;
+		height: 44px;
+		border-radius: 8px;
+		display: flex;
+		align-items: center;
+		font-weight: 500;
+		font-size: 15px;
+		margin-top: 10px;
+		margin-bottom: 30px;
+	}
+	.addNewStarFolderButton:hover {
+		cursor: pointer;
+		background-color: #F5F6F7;
+	}
+	.addNewStarFolder-box {
+		color: #555666;
+		font-size: 14px;
+		font-weight: 400;
+		/* padding: 0 20px 0; */
+		/* margin: 24px 0; */
+		height: 316px;
+		overflow: auto;
+		overscroll-behavior: contain;
+	}
+	.addNewStarFolder-box-item {
+		/* width: 100%; */
+		height: 62px;
+		line-height: 62px;
+		padding: 8px 12px;
+		cursor: pointer;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		border-bottom: 1px solid #f0f0f5;
+		border-radius: 8px;
+		transition: background-color 0.2s ease;
+	}
+	.addNewStarFolder-box-item:hover {
+		background-color: #F5F6F7;
 	}
 </style>

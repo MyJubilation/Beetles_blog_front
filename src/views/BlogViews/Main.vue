@@ -20,8 +20,7 @@
 			v-model="activeName" 
 			type="card"
 			class="tabsTitle"
-			@tab-click="topTitleClick"
-			@tab-remove="removeTab">
+			@tab-click="topTitleClick">
 			<el-tab-pane
 			      v-for="item in topTitleList"
 			      :key="item.name"
@@ -35,16 +34,24 @@
 	<div style="margin-top: 60px;">
 		<img src="../../assets/像素画风景01.gif" style="height: 100px; width: 100%; pointer-events: none; min-width: 885px;" />
 	</div>
-	<div class="article-box" v-for="item in articleList">
+	<div v-if="loading" class="article-box">
+		<div v-for="i in 5" :key="i" class="skeleton-item">
+		  <div class="skeleton-line title"></div>
+		  <div class="skeleton-line content"></div>
+		  <div class="skeleton-line content"></div>
+		  <div class="skeleton-line date"></div>
+		</div>
+	  </div>
+	<div class="article-box" v-for="item in articleList" v-else>
 		<div class="article-item">
-			<router-link :to="`/user/${item.authorId}`" class="article-author" >
+			<router-link :to="`/user/${item.authorId}`" class="article-author" target="_blank">
 				<el-avatar :size="23.2" :src="item.avatar ? item.avatar : 'https://beetles-1.oss-cn-chengdu.aliyuncs.com/%E7%94%B2%E5%A3%B3%E8%99%AB%20LOGO.png'" />
 				<span style="padding: 0 10px;">{{ item.author }}</span>
 			</router-link>
 			<div style="display: flex; width: 100%; margin-left: 10px; min-width: 0;">
 				<div style="flex-grow: 1; max-width: 84%; margin: 8px 0 4px 0;">
-					<router-link :to="`/article/details/${item.id}`" class="article-title">{{ item.title }}</router-link>
-					<router-link :to="`/article/details/${item.id}`" class="article-summary">{{ item.summary }}</router-link>
+					<router-link :to="`/article/details/${item.id}`" class="article-title" target="_blank">{{ item.title }}</router-link>
+					<router-link :to="`/article/details/${item.id}`" class="article-summary" target="_blank">{{ item.summary }}</router-link>
 					<div class="detailsNaviInfo">
 						<div style="display: flex; align-items: center; color: #999; margin-right: 20px; cursor: default;">
 							<el-icon><View /></el-icon>
@@ -60,7 +67,7 @@
 						</div>
 					</div>
 				</div>
-				<router-link :to="`/article/details/${item.id}`" style="width: 128px; margin-right: 0px;">
+				<router-link :to="`/article/details/${item.id}`" style="width: 128px; margin-right: 0px;" target="_blank">
 					<img :src="item.coverImg ? item.coverImg : 'https://beetles-1.oss-cn-chengdu.aliyuncs.com/%E7%94%B2%E5%A3%B3%E8%99%AB%20LOGO.png'" style="height: 84px; width: 128px;border: 1px solid black; border-radius: 5px;"/>
 				</router-link>
 			</div>
@@ -86,6 +93,10 @@
 	import liked from '../../assets/icons/like-fill.svg';
 	import star from '../../assets/icons/star.svg';
 	import stared from '../../assets/icons/star-fill.svg';
+import { ElMessage } from 'element-plus';
+	
+	
+	const loading = ref(false);
 	
 	const currentPage = ref(1);
 	const pageSize = ref(20); // TODO 暂定为10，生产环境时改为20
@@ -102,7 +113,7 @@
 	  // 获取标签名称，发送请求后端查询
 	  // 将页数设为首页
 	  currentPage.value = 1;
-	  console.log(tab.props);
+	  // console.log(tab.props);
 	  getDetailsInfoList(tab.props.name);
 	}
 	const topTitleList = ref([
@@ -130,7 +141,7 @@
 		// 添加tab
 		// 后端查询，修改文章列表
 	  const newTabName = `${++targetName}`;
-	  console.log(newTabName);
+	  // console.log(newTabName);
 	  topTitleList.value.push({
 	    title: tabName,
 	    name: newTabName,
@@ -138,23 +149,23 @@
 	  })
 	  topTabsValue.value = newTabName
 	}
-	const removeTab = (targetName) => {
-	  const tabs = topTitleList.value
-	  let activeName = topTabsValue.value
-	  if (activeName === targetName) {
-	    tabs.forEach((tab, index) => {
-	      if (tab.name === targetName) {
-	        const nextTab = tabs[index + 1] || tabs[index - 1]
-	        if (nextTab) {
-	          activeName = nextTab.name
-	        }
-	      }
-	    })
-	  }
+	// const removeTab = (targetName) => {
+	//   const tabs = topTitleList.value
+	//   let activeName = topTabsValue.value
+	//   if (activeName === targetName) {
+	//     tabs.forEach((tab, index) => {
+	//       if (tab.name === targetName) {
+	//         const nextTab = tabs[index + 1] || tabs[index - 1]
+	//         if (nextTab) {
+	//           activeName = nextTab.name
+	//         }
+	//       }
+	//     })
+	//   }
 	
-	  topTabsValue.value = activeName
-	  topTitleList.value = tabs.filter((tab) => tab.name !== targetName)
-	}
+	//   topTabsValue.value = activeName
+	//   topTitleList.value = tabs.filter((tab) => tab.name !== targetName)
+	// }
 	
 	// 顶部标签搜索
 	const tabsInputvalue = ref('');
@@ -233,15 +244,16 @@
 	};
 	
 	const getDetailsInfoList = async (typeName) => {
-		console.log("获取文章数据列表");
+		// console.log("获取文章数据列表");
 		// if(currentPage == null){
 		// 	currentPage.value = 1;
 		// }
 		// 进行查询
+		loading.value = true;
 		try{
 			// params: 页数，每页条数
 			// console.log(currentPage.value + "  " + pageSize.value);
-			console.log(typeName);
+			// console.log(typeName);
 			const response = await post('/getDetailsInfoList',{
 				"pageSize": pageSize.value,
 				"currentPage": currentPage.value,
@@ -258,10 +270,12 @@
 			//     }));
 			
 			articleList.value = response.data.listInfo;
-			console.log(articleList);
+			// console.log(articleList);
 			totalDetailsSize.value = response.data.total;
 		} catch (error) {
 			console.error('获取文章数据列表:', error);
+		}finally{
+			loading.value = false;
 		}
 	};
 	
@@ -272,7 +286,7 @@
 			"detailsId": item.id,
 			"userId": localStorage.getItem("userId")
 		})
-		console.log(response);
+		// console.log(response);
 		if(response.code == 200){
 			const status = response.data;
 			item.likes += status;
@@ -299,12 +313,13 @@
 			"detailsId": item.id,
 			"userId": localStorage.getItem("userId")
 		})
-		console.log(response);
+		// console.log(response);
 		if(response.code == 200){
 			const status = response.data;
 			item.stars += status;
 			status == 1 ? isStared.value = true : isStared.value = false;
 			// isStared.value ? stars.value-- : stars.value++;
+			// ElMessage.success("已添加到默认收藏夹");
 		}else {
 			ElMessage(response.msg);
 		}
@@ -414,7 +429,8 @@
 	
 	
 	.article-box {
-		width: 58vw;
+		/* width: 58vw; */
+		width: 63vw;
 		min-width: 885px;
 		border-top: 1px solid #e5e5e5;
 		/* padding-left: 200px; */
@@ -430,14 +446,19 @@
 		height: 24px;
 		/* max-width: 900px; */
 		font-weight: bold;
+		overflow: hidden;
 		white-space: nowrap; /* 防止换行 */
-		overflow: hidden; /* 隐藏溢出内容 */
 		text-overflow: ellipsis; /* 用省略号表示省略部分 */
 		color: black;
 		text-decoration: none;
-		 display: inline-block;
+		display: inline-block;
+		width: 100%;
+		word-break: break-word;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 1;
 	}
 	.article-title:hover {
+		/* 68A88B */
 		color: #006FFF;
 	}
 	.article-summary {
@@ -447,7 +468,12 @@
 		text-overflow: ellipsis; /* 用省略号表示省略部分 */
 		text-decoration: none;
 		color: #666;
-		 display: inline-block;
+		display: inline-block;
+		
+		white-space: nowrap;
+		word-break: break-word;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 1;
 	}
 	.article-author {
 		height: 23.2px;
@@ -475,5 +501,42 @@
 		color: black;
 		text-decoration: none;
 		cursor: pointer;
+	}
+	
+	.skeleton-item {
+	  padding: 16px;
+	  border-bottom: 1px solid #eee;
+	}
+	
+	.skeleton-line {
+	  height: 16px;
+	  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+	  background-size: 200% 100%;
+	  animation: skeleton-loading 1.5s infinite;
+	  margin-bottom: 10px;
+	  border-radius: 4px;
+	}
+	
+	.skeleton-line.title {
+	  width: 60%;
+	  height: 20px;
+	}
+	
+	.skeleton-line.content {
+	  width: 100%;
+	}
+	
+	.skeleton-line.date {
+	  width: 30%;
+	  height: 14px;
+	}
+	
+	@keyframes skeleton-loading {
+	  0% {
+	    background-position: 200% 0;
+	  }
+	  100% {
+	    background-position: -200% 0;
+	  }
 	}
 </style>

@@ -7,14 +7,14 @@
 						<el-avatar :size="23.2" :src="item.details.avatar ? item.details.avatar : 'https://beetles-1.oss-cn-chengdu.aliyuncs.com/%E7%94%B2%E5%A3%B3%E8%99%AB%20LOGO.png'" />
 						<span style="padding: 0 10px;">{{ item.details.author }}</span>
 					</div>
-					<router-link :to="`/article/details/${item.details.id}`" class="article-title">
+					<router-link :to="`/article/details/${item.details.id}`" class="article-title" target="_blank">
 						{{ item.details.title }}
 					</router-link>
 					<div style="user-select: none;">
 						<span>{{ item.viewTime }}</span>
 					</div>
 				</div>
-				<router-link :to="`/article/details/${item.details.id}`" style="width: 128px; margin-right: 0px;">
+				<router-link :to="`/article/details/${item.details.id}`" style="width: 128px; margin-right: 0px;" target="_blank">
 					<img :src="item.details.coverImg ? item.details.coverImg : 'https://beetles-1.oss-cn-chengdu.aliyuncs.com/%E7%94%B2%E5%A3%B3%E8%99%AB%20LOGO.png'" style="height: 84px; width: 128px;border: 1px solid black; border-radius: 5px;"/>
 				</router-link>
 			</div>

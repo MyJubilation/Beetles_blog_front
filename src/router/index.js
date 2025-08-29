@@ -6,6 +6,8 @@ import AboutMe from "@/views/AboutMe.vue"
 import Login from "@/views/Login/Login.vue"
 import Register from "@/views/Login/Register.vue"
 import AdminHomepage from "@/views/Admin/Homepage/Homepage.vue"
+import Danmakus from "@/views/Danmakus.vue"
+import SelectDetails from "@/views/BlogViews/SelectDetails.vue"
 
 const constantRoutes = [
 	{
@@ -30,6 +32,16 @@ const constantRoutes = [
 		    path:'viewHistory/:id',
 		    name:'viewHistory',
 		    component: () => import('../views/BlogViews/ViewHistory.vue')
+		  },
+		  {
+		    path:'follow/:id',
+		    name:'follow',
+		    component: () => import('../views/BlogViews/Follow.vue')
+		  },
+		  {
+		    path:'star/:id',
+		    name:'star',
+		    component: () => import('../views/BlogViews/Stars.vue')
 		  }
 		]
 	},
@@ -57,8 +69,16 @@ const constantRoutes = [
 		component: AboutMe
 	},
 	{
+		path: "/danmakus",
+		component: Danmakus
+	},
+	{
 		path: "/writingarticles",
 		component: WritingArticles
+	},
+	{
+		path: "/select",
+		component: SelectDetails
 	},
 	
 	{

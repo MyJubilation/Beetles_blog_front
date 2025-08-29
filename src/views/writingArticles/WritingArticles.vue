@@ -125,7 +125,7 @@
 				      >
 							<span style="font-size: 16px;">文章摘要<el-icon><Warning /></el-icon></span>
 				      </el-tooltip>
-				  <el-input v-model="detailsInfo.summary" style="width: 600px; margin-left: 20px;" placeholder="请输入文章摘要(不超过45字)" maxlength="45" />
+				  <el-input v-model="detailsInfo.summary" style="width: 600px; margin-left: 20px;" placeholder="请输入文章摘要(不超过120字)" maxlength="120" />
 			</div>
 			<!-- <div style="height: 200px; width: 100%; display: flex;">
 				<span style="font-size: 16px;">添加封面</span>

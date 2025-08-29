@@ -18,18 +18,18 @@
 					</router-link>
 				</div>
 				<div style="padding: 10px 0; border-bottom: 1px solid #e5e5e5;">
-					<a class="aside-item" href="#">
+					<router-link :to="`/homepage/follow/${userId}`" class="aside-item">
 						<el-icon :size="24" class="aside-item-icon"><Connection /></el-icon>
 						<div class="aside-item-name">关注</div>
-					</a>
+					</router-link>
 					<router-link :to="`/homepage/viewHistory/${userId}`" class="aside-item">
 						<el-icon :size="24" class="aside-item-icon"><Clock /></el-icon>
 						<div class="aside-item-name">历史</div>
 					</router-link>
-					<a class="aside-item" href="#">
+					<router-link :to="`/homepage/star/${userId}`" class="aside-item">
 						<el-icon :size="24" class="aside-item-icon"><Star /></el-icon>
 						<div class="aside-item-name">收藏</div>
-					</a>
+					</router-link>
 					<!-- <a class="aside-item" href="#">
 						<el-icon :size="24" class="aside-item-icon"><Setting /></el-icon>
 						<div class="aside-item-name">设置</div>

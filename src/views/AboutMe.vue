@@ -1,61 +1,42 @@
 <template>
-  <div class="danmaku-container">
-    <div
-      v-for="(danmaku, index) in danmakus"
-      :key="index"
-      class="danmaku"
-      :style="{
-        left: danmaku.left + 'px',
-        top: danmaku.top + 'px',
-        animation: `danmakuMove ${danmaku.duration}s linear forwards`
-      }"
-      @animationend="removeDanmaku(index)"
-    >
-      {{ danmaku.text }}
-    </div>
+  <div>
+    <el-upload
+    				  v-if="uploadVisible"
+    				  class="upload-demo"
+    				  :on-success="afterUpdateImg"
+    				  drag
+    				  :limit="1"
+    				  action="/api/imgUpload">
+    				  <i class="el-icon-upload"></i>
+    				  <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
+    				  <!-- <div class="el-upload__tip" slot="tip">只能上传jpg/png文件，且不超过500kb</div> -->
+    				</el-upload>
   </div>
 </template>
 
 <script setup>
-	import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
+import MarkdownReader from '../lib/utils/MarkdownReader.vue';
+
+// 获取文章详情内容
+
+const uploadVisible = ref(true)
+
+const afterUpdateImg = (response, file, fileList) => {
+				// 先加载，后关闭上传处
+				console.log("response: " + response);
+				// 上传
+				// this.imageName = response;
+				// this.imageSrc = '/testImg/' + response;
+				// console.log("imageSrc: " + this.imageSrc);
+				// 关闭上传处
+				uploadVisible.value = false;
+			};
+
+
+onMounted(() => {
 	
-	const danmakus = ref([
-		{ text: '弹幕1', left: 0, top: 50, duration: 3 },
-		{ text: '弹幕2', left: 0, top: 100, duration: 5 },
-	]);
-	
-	const removeDanmaku = (index) => {
-      danmakus.value.splice(index, 1);
-    }
-	
+})
+// 在 <script setup> 中，顶层的变量和函数会自动暴露给模板使用
+// 所以不需要再写 return { markdownText }
 </script>
-
-
-
-<style>
-.danmaku-container {
-  position: relative;
-  width: 100%;
-  height: 200px;
-  overflow: hidden;
-  /* background-color: #333; */
-}
-
-.danmaku {
-  position: absolute;
-  white-space: nowrap;
-  color: white;
-  background-color: rgba(0, 0, 0, 0.7);
-  padding: 5px 10px;
-  border-radius: 5px;
-}
-
-@keyframes danmakuMove {
-  from {
-    transform: translateX(80vw);
-  }
-  to {
-    transform: translateX(-100%);
-  }
-}
-</style>
